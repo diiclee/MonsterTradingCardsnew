@@ -1,0 +1,14 @@
+services:
+  db:
+    image: postgres:17
+    volumes:
+      - swen1-db:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: swen1
+      POSTGRES_USER: swen1
+      POSTGRES_DB: swen1
+    ports:
+      - "5432:5432"
+
+volumes:
+  swen1-db:
