@@ -26,7 +26,7 @@ namespace MonsterTradingCardsnew
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         
         /// <summary>Creates a new instance of this class.</summary>
-        private User()
+        public User()
         {
         }
 
@@ -39,12 +39,14 @@ namespace MonsterTradingCardsnew
         /// <summary>Gets the user name.</summary>
         public string UserName
         {
-            get; private set;
+            get;
+            set;
         } = string.Empty;
         
         public string Password
         {
-            get; private set;
+            get;
+            set;
         } = string.Empty;
 
         public List<ICard> Deck
@@ -68,8 +70,8 @@ namespace MonsterTradingCardsnew
         {
             get; private set;
         }
-        
 
+        public string? Salt { get; set; }
 
 
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -106,7 +108,7 @@ namespace MonsterTradingCardsnew
         /// <param name="fullName">Full name.</param>
         /// <param name="eMail">E-mail addresss.</param>
         /// <exception cref="UserException">Thrown when the user name already exists.</exception>
-        public static void Create(string userName, string password)
+       /* public static void Create(string userName, string password)
         {
             if(_Users.ContainsKey(userName))
             {
@@ -124,8 +126,7 @@ namespace MonsterTradingCardsnew
             };
 
             _Users.Add(user.UserName, user);
-        }
-
+        }*/
 
         /// <summary>Gets a user by user name.</summary>
         /// <param name="userName">User name.</param>

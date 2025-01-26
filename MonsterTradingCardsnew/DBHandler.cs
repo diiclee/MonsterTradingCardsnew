@@ -5,55 +5,72 @@ namespace MonsterTradingCardsnew
 {
     public static class DBHandler
     {
-        private const string ConnectionString = "Host=localhost;Port=5432;Database=mydb;Username=postgres;Password=postgres";
+        // Angepasster ConnectionString für Docker-Compose
+        public const string ConnectionString = "Host=127.0.0.1;Port=5432;Database=mtcg;Username=postgres;Password=dicle";
 
-        // Testet Datenbankverbindung 
-        public static void TestConnection()
+        
+        // Funktion zum Testen der Datenbankverbindung
+        public static bool TestDatabaseConnection()
         {
             try
             {
+                // Versuche, eine Verbindung zur Datenbank aufzubauen
                 using var connection = new NpgsqlConnection(ConnectionString);
                 connection.Open();
-                Console.WriteLine("Verbindung zur Datenbank erfolgreich!");
+
+                // Führe eine einfache SELECT-Abfrage aus, um zu überprüfen, ob die Verbindung funktioniert
+                using var command = new NpgsqlCommand("SELECT 1", connection);
+                var result = command.ExecuteScalar();
+
+                // Wenn die Abfrage erfolgreich ist, geben wir true zurück
+                if (result != null && Convert.ToInt32(result) == 1)
+                {
+                    Console.WriteLine("Datenbankverbindung erfolgreich!");
+                    return true;
+                }
+
+                Console.WriteLine("Datenbankverbindung fehlgeschlagen!");
+                return false;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Fehler bei der Datenbankverbindung: {ex.Message}");
+                // Wenn ein Fehler auftritt, gib eine Fehlermeldung aus
+                Console.WriteLine($"Fehler bei der Verbindung zur Datenbank: {ex.Message}");
+                return false;
             }
         }
 
-        // Erstellt neuen Benutzer
-        public static void CreateUser(string userName, string password)
+        // Überprüft, ob ein Benutzer existiert
+        public static bool UserExists(string userName)
         {
             try
             {
                 using var connection = new NpgsqlConnection(ConnectionString);
                 connection.Open();
 
-                string query = "INSERT INTO Users (UserName, Password, Coins, Elo) VALUES (@UserName, @Password, 20, 0)";
+                string query = "SELECT COUNT(*) FROM Users WHERE UserName = @UserName";
                 using var command = new NpgsqlCommand(query, connection);
 
                 command.Parameters.AddWithValue("@UserName", userName);
-                command.Parameters.AddWithValue("@Password", password); // Passwörter noch hashen!
-
-                int rowsAffected = command.ExecuteNonQuery();
-                Console.WriteLine($"{rowsAffected} Benutzer erfolgreich erstellt.");
+                var result = command.ExecuteScalar();
+                return Convert.ToInt32(result) > 0;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Fehler beim Erstellen des Benutzers: {ex.Message}");
+                Console.WriteLine($"Fehler beim Überprüfen des Benutzers: {ex.Message}");
+                return false;
             }
         }
 
         // Liest einen Benutzer aus der Datenbank
-        public static void GetUser(string userName)
+        public static User? GetUser(string userName)
         {
             try
             {
                 using var connection = new NpgsqlConnection(ConnectionString);
                 connection.Open();
 
-                string query = "SELECT * FROM Users WHERE UserName = @UserName";
+                string query = "SELECT UserName, Password FROM Users WHERE UserName = @UserName";
                 using var command = new NpgsqlCommand(query, connection);
 
                 command.Parameters.AddWithValue("@UserName", userName);
@@ -61,64 +78,46 @@ namespace MonsterTradingCardsnew
                 using var reader = command.ExecuteReader();
                 if (reader.Read())
                 {
-                    Console.WriteLine($"UserName: {reader["UserName"]}, Coins: {reader["Coins"]}, Elo: {reader["Elo"]}");
+                    return new User
+                    {
+                        UserName = reader["UserName"].ToString(),
+                        Password = reader["Password"].ToString(),
+                    };
                 }
-                else
-                {
-                    Console.WriteLine("Benutzer nicht gefunden.");
-                }
+
+                return null; // Benutzer nicht gefunden
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Fehler beim Lesen des Benutzers: {ex.Message}");
+                Console.WriteLine($"Fehler beim Abrufen des Benutzers: {ex.Message}");
+                return null;
             }
         }
 
-        // Aktualisiert Münzen eines Benutzers
-        public static void UpdateCoins(string userName, int coins)
+        // Methode zum Erstellen eines Benutzers in der Datenbank
+        public static void CreateUser(string userName, string hashedPassword)
         {
             try
             {
                 using var connection = new NpgsqlConnection(ConnectionString);
                 connection.Open();
 
-                string query = "UPDATE Users SET Coins = @Coins WHERE UserName = @UserName";
+                string query =
+                    "INSERT INTO Users (UserName, Password) VALUES (@UserName, @Password)";
                 using var command = new NpgsqlCommand(query, connection);
 
                 command.Parameters.AddWithValue("@UserName", userName);
-                command.Parameters.AddWithValue("@Coins", coins);
+                command.Parameters.AddWithValue("@Password", hashedPassword);
 
-                int rowsAffected = command.ExecuteNonQuery();
-                Console.WriteLine($"{rowsAffected} Benutzer erfolgreich aktualisiert.");
+                command.ExecuteNonQuery();
+                Console.WriteLine("Benutzer erfolgreich erstellt.");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Fehler beim Aktualisieren der Münzen: {ex.Message}");
-            }
-        }
-
-        // Löscht Benutzer
-        public static void DeleteUser(string userName)
-        {
-            try
-            {
-                using var connection = new NpgsqlConnection(ConnectionString);
-                connection.Open();
-
-                string query = "DELETE FROM Users WHERE UserName = @UserName";
-                using var command = new NpgsqlCommand(query, connection);
-
-                command.Parameters.AddWithValue("@UserName", userName);
-
-                int rowsAffected = command.ExecuteNonQuery();
-                Console.WriteLine($"{rowsAffected} Benutzer erfolgreich gelöscht.");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Fehler beim Löschen des Benutzers: {ex.Message}");
+                Console.WriteLine($"Fehler beim Erstellen des Benutzers: {ex.Message}");
             }
         }
     }
 }
-
-//comment
+        
+        

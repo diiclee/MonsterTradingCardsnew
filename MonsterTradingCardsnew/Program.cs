@@ -20,9 +20,7 @@ namespace MonsterTradingCardsnew
         /// <param name="args">Command line arguments.</param>
         static void Main(string[] args)
         {
-            // Test database connection
-            DBHandler.TestConnection();
-
+            DBHandler.TestDatabaseConnection();
             // Start HTTP server
             HttpSvr svr = new();
             svr.Incoming += Svr_Incoming; //(sender, e) => { Handler.HandleEvent(e); };

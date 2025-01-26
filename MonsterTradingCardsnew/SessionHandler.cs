@@ -15,10 +15,10 @@ namespace MonsterTradingCardsnew
         /// <param name="e">Event arguments.</param>
         public override bool Handle(HttpSvrEventArgs e)
         {
-            if((e.Path.TrimEnd('/', ' ', '\t') == "/sessions") && (e.Method == "POST"))
+            /*if((e.Path.TrimEnd('/', ' ', '\t') == "/sessions") && (e.Method == "POST"))
             {                                                                   // POST /sessions will create a new session
                 return _CreateSession(e);
-            }
+            }*/
 
             return false;
         }
