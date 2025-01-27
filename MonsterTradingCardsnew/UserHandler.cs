@@ -114,55 +114,63 @@ namespace MonsterTradingCardsnew
 
         // Benutzeranmeldung
         private static bool _LoginUser(HttpSvrEventArgs e)
+{
+    JsonObject? reply = new JsonObject() { ["success"] = false, ["message"] = "Invalid request." };
+    int status = HttpStatusCode.BAD_REQUEST;  // initialisiere Antwort
+
+    try
+    {
+        JsonNode? json = JsonNode.Parse(e.Payload);  // Payload parsen
+        if (json != null)
         {
-            JsonObject? reply = new JsonObject() { ["success"] = false, ["message"] = "Invalid request." };
-            int status = HttpStatusCode.BAD_REQUEST;  // initialisiere Antwort
+            string userName = (string)json["Username"]!;
+            string enteredPassword = (string)json["Password"]!;
 
-            try
+            // Benutzer aus der DB abrufen
+            var user = DBHandler.GetUser(userName);
+            if (user != null)
             {
-                JsonNode? json = JsonNode.Parse(e.Payload);  // Payload parsen
-                if (json != null)
+                string storedHash = user.Password;  // Den gespeicherten Hash des Benutzers abrufen
+
+                // Passwort validieren
+                bool isPasswordValid = PasswordHelper.VerifyPassword(enteredPassword, storedHash);
+                if (isPasswordValid)
                 {
-                    string userName = (string)json["Username"]!;
-                    string enteredPassword = (string)json["Password"]!;
+                    // Token mit der vorhandenen Funktion erstellen
+                    string token = Token._CreateTokenFor(user);
 
-                    // Benutzer aus der DB abrufen
-                    var user = DBHandler.GetUser(userName);  
-                    if (user != null)
+                    // Erfolgreiche Anmeldung
+                    status = HttpStatusCode.OK;
+                    reply = new JsonObject()
                     {
-                        string storedHash = user.Password;  // Den gespeicherten Hash des Benutzers abrufen
-
-                        // Passwort validieren
-                        bool isPasswordValid = PasswordHelper.VerifyPassword(enteredPassword, storedHash);
-                        if (isPasswordValid)
-                        {
-                            // Erfolgreiche Anmeldung
-                            status = HttpStatusCode.OK;
-                            reply = new JsonObject() { ["success"] = true, ["message"] = "Login successful." };
-                        }
-                        else
-                        {
-                            // Ungültiges Passwort
-                            status = HttpStatusCode.UNAUTHORIZED;
-                            reply = new JsonObject() { ["success"] = false, ["message"] = "Invalid credentials." };
-                        }
-                    }
-                    else
-                    {
-                        // Benutzer nicht gefunden
-                        status = HttpStatusCode.NOT_FOUND;
-                        reply = new JsonObject() { ["success"] = false, ["message"] = "User not found." };
-                    }
+                        ["success"] = true,
+                        ["message"] = "Login successful.",
+                        ["token"] = token  // Token in die Antwort einfügen
+                    };
+                }
+                else
+                {
+                    // Ungültiges Passwort
+                    status = HttpStatusCode.UNAUTHORIZED;
+                    reply = new JsonObject() { ["success"] = false, ["message"] = "Invalid credentials." };
                 }
             }
-            catch (Exception ex)
+            else
             {
-                reply = new JsonObject() { ["success"] = false, ["message"] = "Unexpected error." };
-                Console.WriteLine($"Fehler bei der Anmeldung: {ex.Message}");
+                // Benutzer nicht gefunden
+                status = HttpStatusCode.NOT_FOUND;
+                reply = new JsonObject() { ["success"] = false, ["message"] = "User not found." };
             }
-
-            e.Reply(status, reply?.ToJsonString());  // Antwort senden
-            return true;
         }
+    }
+    catch (Exception ex)
+    {
+        reply = new JsonObject() { ["success"] = false, ["message"] = "Unexpected error: " + ex.Message };
+    }
+
+    e.Reply(status, reply?.ToJsonString());  // Antwort senden
+    return true;
+}
+
     }
 }
