@@ -117,7 +117,40 @@ namespace MonsterTradingCardsnew
                 Console.WriteLine($"Fehler beim Erstellen des Benutzers: {ex.Message}");
             }
         }
+        public static bool UpdateUser(string username, string? name, string? bio, string? image)
+        {
+            try
+            {
+                using var connection = new NpgsqlConnection(ConnectionString);
+                connection.Open();
+
+                // Dynamisches Update-Statement erstellen
+                string query = "UPDATE users SET ";
+                List<string> updates = new();
+                if (name != null) updates.Add("name_choice = @Name");
+                if (bio != null) updates.Add("bio = @Bio");
+                if (image != null) updates.Add("image = @Image");
+
+                if (updates.Count == 0) return false; // Falls nichts geändert wird, Abbruch
+
+                query += string.Join(", ", updates) + " WHERE username = @Username";
+
+                using var command = new NpgsqlCommand(query, connection);
+                command.Parameters.AddWithValue("@Username", username);
+                if (name != null) command.Parameters.AddWithValue("@Name", name);
+                if (bio != null) command.Parameters.AddWithValue("@Bio", bio);
+                if (image != null) command.Parameters.AddWithValue("@Image", image);
+
+                int rowsAffected = command.ExecuteNonQuery();
+                return rowsAffected > 0;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Fehler beim Aktualisieren des Benutzers: {ex.Message}");
+                return false;
+            }
+        }
+
     }
 }
-        
         

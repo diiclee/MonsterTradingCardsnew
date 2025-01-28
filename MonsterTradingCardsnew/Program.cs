@@ -8,14 +8,14 @@ namespace MonsterTradingCardsnew
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // public constants                                                                                                 //
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        
+
         /// <summary>Determines if debug token ("UserName-debug") will be accepted.</summary>
         public const bool ALLOW_DEBUG_TOKEN = true;
 
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // entry point                                                                                                      //
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        
+
         /// <summary>Application entry point.</summary>
         /// <param name="args">Command line arguments.</param>
         static void Main(string[] args)
@@ -32,11 +32,11 @@ namespace MonsterTradingCardsnew
         {
             _ = Handler.HandleEvent(e);
 
-            /*           
+            /*
             Console.WriteLine(e.Method);
             Console.WriteLine(e.Path);
             Console.WriteLine();
-            foreach(HttpHeader i in e.Headers) 
+            foreach(HttpHeader i in e.Headers)
             {
                 Console.WriteLine(i.Name + ": " + i.Value);
             }

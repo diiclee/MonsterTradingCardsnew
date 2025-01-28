@@ -1,7 +1,6 @@
 using System;
 
 
-
 namespace MonsterTradingCardsnew
 {
     /// <summary>Handlers that handle HTTP requests implement this interface.</summary>
@@ -10,7 +9,7 @@ namespace MonsterTradingCardsnew
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // public methods                                                                                                   //
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        
+
         /// <summary>Tries to handle a HTTP request.</summary>
         /// <param name="e">Event arguments.</param>
         /// <returns>Returns TRUE if the request was handled by this instance,

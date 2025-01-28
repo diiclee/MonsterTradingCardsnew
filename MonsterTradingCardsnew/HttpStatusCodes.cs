@@ -1,7 +1,6 @@
 using System;
 
 
-
 namespace MonsterTradingCardsnew
 {
     /// <summary>This enumeration defines HTTP status codes that are used by

@@ -1,7 +1,6 @@
 using System;
 
 
-
 namespace MonsterTradingCardsnew
 {
     /// <summary>This delegate is used for <see cref="HttpSvr"/> events.</summary>

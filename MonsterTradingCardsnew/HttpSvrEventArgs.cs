@@ -3,29 +3,27 @@ using System.Net.Sockets;
 using System.Text;
 
 
-
 namespace MonsterTradingCardsnew
 {
     /// <summary>This class defines event arguments for the <see cref="HttpSvrEventHandler"/> event handler.</summary>
-    public class HttpSvrEventArgs: EventArgs
+    public class HttpSvrEventArgs : EventArgs
     {
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // protected members                                                                                                //
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        
+
         /// <summary>TCP client.</summary>
         protected TcpClient _Client;
-
 
 
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // constructors                                                                                                     //
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        
+
         /// <summary>Creates a new instance of this class.</summary>
         /// <param name="client">TCP client.</param>
         /// <param name="plainMessage">Plain HTTP message.</param>
-        public HttpSvrEventArgs(TcpClient client, string plainMessage) 
+        public HttpSvrEventArgs(TcpClient client, string plainMessage)
         {
             _Client = client;
 
@@ -36,9 +34,9 @@ namespace MonsterTradingCardsnew
             bool inheaders = true;
             List<HttpHeader> headers = new();
 
-            for(int i = 0; i < lines.Length; i++) 
+            for (int i = 0; i < lines.Length; i++)
             {
-                if(i == 0)
+                if (i == 0)
                 {
                     string[] inc = lines[0].Split(' ');
                     Method = inc[0];
@@ -46,17 +44,24 @@ namespace MonsterTradingCardsnew
                     continue;
                 }
 
-                if(inheaders)
+                if (inheaders)
                 {
-                    if(string.IsNullOrWhiteSpace(lines[i])) 
+                    if (string.IsNullOrWhiteSpace(lines[i]))
                     {
                         inheaders = false;
                     }
-                    else { headers.Add(new(lines[i])); }
+                    else
+                    {
+                        headers.Add(new(lines[i]));
+                    }
                 }
                 else
                 {
-                    if(!string.IsNullOrWhiteSpace(Payload)) { Payload += "\r\n"; }
+                    if (!string.IsNullOrWhiteSpace(Payload))
+                    {
+                        Payload += "\r\n";
+                    }
+
                     Payload += lines[i];
                 }
             }
@@ -65,51 +70,34 @@ namespace MonsterTradingCardsnew
         }
 
 
-
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // public properties                                                                                                //
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        
+
         /// <summary>Gets the plain message.</summary>
-        public string PlainMessage
-        {
-            get; protected set;
-        } = string.Empty;
+        public string PlainMessage { get; protected set; } = string.Empty;
 
 
         /// <summary>Gets the HTTP method.</summary>
-        public virtual string Method
-        {
-            get; protected set;
-        } = string.Empty;
+        public virtual string Method { get; protected set; } = string.Empty;
 
 
         /// <summary>Gets the HTTP path.</summary>
-        public virtual string Path
-        {
-            get; protected set;
-        } = string.Empty;
+        public virtual string Path { get; protected set; } = string.Empty;
 
 
         /// <summary>Gets the HTTP headers.</summary>
-        public virtual HttpHeader[] Headers
-        {
-            get; protected set;
-        } = Array.Empty<HttpHeader>();
+        public virtual HttpHeader[] Headers { get; protected set; } = Array.Empty<HttpHeader>();
 
 
         /// <summary>Gets the payload.</summary>
-        public virtual string Payload
-        {
-            get; protected set;
-        } = string.Empty;
-
+        public virtual string Payload { get; protected set; } = string.Empty;
 
 
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // public methods                                                                                                   //
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        
+
         /// <summary>Replies the request</summary>
         /// <param name="status">HTTP Status code.</param>
         /// <param name="msg">Reply body.</param>
@@ -117,7 +105,7 @@ namespace MonsterTradingCardsnew
         {
             string data;
 
-            switch(status)
+            switch (status)
             {
                 case 200:
                     data = "HTTP/1.1 200 OK\n"; break;
@@ -131,12 +119,16 @@ namespace MonsterTradingCardsnew
                     data = $"HTTP/1.1 {status} Status unknown\n"; break;
             }
 
-            if(string.IsNullOrEmpty(body)) 
+            if (string.IsNullOrEmpty(body))
             {
                 data += "Content-Length: 0\n";
             }
+
             data += "Content-Type: text/plain\n\n";
-            if(!string.IsNullOrEmpty(body)) { data += body; }
+            if (!string.IsNullOrEmpty(body))
+            {
+                data += body;
+            }
 
             byte[] buf = Encoding.ASCII.GetBytes(data);
             _Client.GetStream().Write(buf, 0, buf.Length);
