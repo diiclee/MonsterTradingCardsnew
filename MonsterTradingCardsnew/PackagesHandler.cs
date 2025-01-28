@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json.Nodes;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
@@ -72,7 +73,7 @@ public class PackagesHandler : Handler
 
             string cardId = cardJson["Id"]!.ToString();
             string cardName = cardJson["Name"]!.ToString();
-            float damage = float.Parse(cardJson["Damage"]!.ToString());
+            float damage = float.Parse(cardJson["Damage"]!.ToString(), CultureInfo.InvariantCulture);
 
 
             // Element- und Kartentyp bestimmen
