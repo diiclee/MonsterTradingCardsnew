@@ -2,7 +2,7 @@ namespace MonsterTradingCardsnew;
 
 public enum Element
 {
-    fire,
-    water,
-    normal
+    Fire,
+    Water,
+    Normal
 }

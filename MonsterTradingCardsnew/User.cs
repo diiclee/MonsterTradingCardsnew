@@ -33,13 +33,13 @@ namespace MonsterTradingCardsnew
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         /// <summary>Gets the user name.</summary>
-        public string UserName { get; set; } = string.Empty;
+        public string UserName { get; set; }
 
-        public string Password { get; set; } = string.Empty;
+        public string Password { get; set; } 
 
-        public List<ICard> Deck { get; private set; } = null!;
+        public List<ICard> Deck { get; private set; } 
 
-        public List<ICard> Stack { get; private set; } = null!;
+        public List<ICard> Stack { get; private set; }
 
         public int Coins { get; set; }
 

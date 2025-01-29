@@ -282,4 +282,45 @@ public class CardHandler : Handler
         e.Reply(status, reply?.ToJsonString()); // Antwort senden
         return true;
     }
+    
+    public static List<Card> GetDeckByUsername(string username) //für battle
+    {
+        var deck = new List<Card>();
+
+        try
+        {
+            using var connection = new NpgsqlConnection(DBHandler.ConnectionString);
+            connection.Open();
+
+            string query = @"
+        SELECT c.card_id, c.name, c.damage, c.element_type, c.card_type, c.monster_type
+        FROM deck d
+        JOIN cards c ON c.card_id = ANY(ARRAY[d.card1_id, d.card2_id, d.card3_id, d.card4_id])
+        WHERE d.username = @username";
+
+            using var command = new NpgsqlCommand(query, connection);
+            command.Parameters.AddWithValue("@username", username);
+
+            using var reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                deck.Add(new Card(
+                    reader.GetString(1),  // Name
+                    reader.GetFloat(2),   // Damage
+                    Enum.Parse<Element>(reader.GetString(3)), // ElementType
+                    reader.GetString(4),  // CardType
+                    reader.IsDBNull(5) ? null : reader.GetString(5) // MonsterType (optional)
+                ));
+            }
+
+            Console.WriteLine($"Deck von {username} erfolgreich geladen ({deck.Count} Karten).");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Fehler beim Laden des Decks für {username}: {ex.Message}");
+        }
+
+        return deck;
+    }
+
 }
