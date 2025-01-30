@@ -3,10 +3,16 @@ using Npgsql;
 
 namespace MonsterTradingCardsnew
 {
-    public static class DBHandler
+    public class DBHandler
     {
         // Angepasster ConnectionString für Docker-Compose
-        public const string ConnectionString = "Host=127.0.0.1;Port=5432;Database=mtcg;Username=postgres;Password=dicle";
+        public static string ConnectionString =
+            "Host=127.0.0.1;Port=5432;Database=mtcg;Username=postgres;Password=dicle";
+
+        public static void SetConnectionString(string newConnectionString)
+        {
+            ConnectionString = newConnectionString;
+        }
 
         
         // Funktion zum Testen der Datenbankverbindung
