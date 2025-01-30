@@ -102,40 +102,62 @@ namespace MonsterTradingCardsnew
             if (deck1.Count > 0)
             {
                 battleResult = $"{authenticatedUser1.UserName} gewinnt!";
-                UpdateElo(authenticatedUser1.UserName, authenticatedUser2.UserName, 3, -5);
+                UpdateStats(authenticatedUser1.UserName, authenticatedUser2.UserName, 3, -5, 5, 1, 1);
             }
             else if (deck2.Count > 0)
             {
                 battleResult = $"{authenticatedUser2.UserName} gewinnt!";
-                UpdateElo(authenticatedUser2.UserName, authenticatedUser1.UserName, 3, -5);
+                UpdateStats(authenticatedUser2.UserName, authenticatedUser1.UserName, 3, -5, 5, 1, 1);
             }
             else
             {
                 battleResult = "Der Kampf endet unentschieden.";
-                UpdateElo(authenticatedUser1.UserName, authenticatedUser2.UserName, 1, 1);
+                UpdateStats(authenticatedUser1.UserName, authenticatedUser2.UserName, 1, 1, 0, 0, 0);
             }
 
             log.Add(battleResult);
             SendBattleLog(player1, player2, log);
         }
 
-        private static void UpdateElo(string winner, string loser, int winnerPoints, int loserPoints)
+        /// <summary>
+        /// Aktualisiert Elo, Coins, Wins und Losses in einer Transaktion
+        /// </summary>
+        private static void UpdateStats(string winner, string loser, int winnerElo, int loserElo, int coins, int winCount, int lossCount)
         {
             using var connection = new NpgsqlConnection(DBHandler.ConnectionString);
             connection.Open();
 
-            string updateQuery = "UPDATE users SET elo = GREATEST(0, elo + @elo) WHERE username = @username";
-            using var updateCommand = new NpgsqlCommand(updateQuery, connection);
+            using var transaction = connection.BeginTransaction();
+            try
+            {
+                string updateQuery = @"
+                    UPDATE users 
+                    SET elo = GREATEST(0, elo + @elo), coins = coins + @coins, wins = wins + @wins
+                    WHERE username = @username;
+                    
+                    UPDATE users 
+                    SET elo = GREATEST(0, elo + @elo), losses = losses + @losses
+                    WHERE username = @username_loser;
+                ";
 
-            // Gewinner-ELO aktualisieren
-            updateCommand.Parameters.AddWithValue("@elo", winnerPoints);
-            updateCommand.Parameters.AddWithValue("@username", winner);
-            updateCommand.ExecuteNonQuery();
+                using var updateCommand = new NpgsqlCommand(updateQuery, connection);
+                updateCommand.Parameters.AddWithValue("@elo", winnerElo);
+                updateCommand.Parameters.AddWithValue("@coins", coins);
+                updateCommand.Parameters.AddWithValue("@wins", winCount);
+                updateCommand.Parameters.AddWithValue("@username", winner);
 
-            // Verlierer-ELO aktualisieren
-            updateCommand.Parameters["@elo"].Value = loserPoints;
-            updateCommand.Parameters["@username"].Value = loser;
-            updateCommand.ExecuteNonQuery();
+                updateCommand.Parameters.AddWithValue("@elo", loserElo);
+                updateCommand.Parameters.AddWithValue("@losses", lossCount);
+                updateCommand.Parameters.AddWithValue("@username_loser", loser);
+
+                updateCommand.ExecuteNonQuery();
+                transaction.Commit();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Fehler beim Updaten der Spielerstatistiken: {ex.Message}");
+                transaction.Rollback();
+            }
         }
 
         private static void SendBattleLog(HttpSvrEventArgs player1, HttpSvrEventArgs player2, List<string> log)
@@ -159,69 +181,6 @@ namespace MonsterTradingCardsnew
 
         private static int DetermineWinner(Card card1, Card card2, List<string> log)
         {
-            // Spezialfälle prüfen
-            if (card1.MonsterType == "Goblin" && card2.MonsterType == "Dragon")
-            {
-                log.Add("Goblin hat zu viel Angst vor Dragon, kann nicht angreifen!");
-                return 2;
-            }
-
-            if (card2.MonsterType == "Goblin" && card1.MonsterType == "Dragon")
-            {
-                log.Add("Goblin hat zu viel Angst vor Dragon, kann nicht angreifen!");
-                return 1;
-            }
-
-            if (card1.MonsterType == "Kraken" && card2.CardType == "Spell")
-            {
-                log.Add("Kraken ist immun gegen Zauber!");
-                return 1;
-            }
-
-            if (card2.MonsterType == "Kraken" && card1.CardType == "Spell")
-            {
-                log.Add("Kraken ist immun gegen Zauber!");
-                return 2;
-            }
-
-            if (card1.MonsterType == "Knight" && card2.CardType == "Spell" && card2.ElementType == Element.Water)
-            {
-                log.Add("Knight wird von WaterSpell sofort besiegt!");
-                return 2;
-            }
-
-            if (card2.MonsterType == "Knight" && card1.CardType == "Spell" && card1.ElementType == Element.Water)
-            {
-                log.Add("Knight wird von WaterSpell sofort besiegt!");
-                return 1;
-            }
-
-            // Spezialfälle: FireElves und Wizards
-            if (card1.MonsterType == "FireElf" && card2.MonsterType == "Dragon")
-            {
-                log.Add("FireElf weicht dem Angriff des Dragons aus!");
-                return 2;
-            }
-
-            if (card2.MonsterType == "FireElf" && card1.MonsterType == "Dragon")
-            {
-                log.Add("FireElf weicht dem Angriff des Dragons aus!");
-                return 1;
-            }
-
-            if (card1.MonsterType == "Wizard" && card2.MonsterType == "Ork")
-            {
-                log.Add("Wizard kontrolliert den Ork! Der Ork gibt auf.");
-                return 1;
-            }
-
-            if (card2.MonsterType == "Wizard" && card1.MonsterType == "Ork")
-            {
-                log.Add("Wizard kontrolliert den Ork! Der Ork gibt auf.");
-                return 2;
-            }
-
-            // Elementarboni berechnen
             float damage1 = card1.Damage * GetElementMultiplier(card1.ElementType, card2.ElementType);
             float damage2 = card2.Damage * GetElementMultiplier(card2.ElementType, card1.ElementType);
 

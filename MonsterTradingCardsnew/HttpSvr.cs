@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MonsterTradingCardsnew
@@ -10,18 +11,17 @@ namespace MonsterTradingCardsnew
     public sealed class HttpSvr
     {
         private TcpListener? _Listener;
-
         public event HttpSvrEventHandler? Incoming;
 
         private readonly ConcurrentQueue<TcpClient> _WaitingClients = new();
         private readonly ConcurrentQueue<string> _DataTemp = new();
+        private readonly ManualResetEvent _BattleReady = new(false); // Synchronisationsmechanismus
 
         public bool Active { get; private set; } = false;
 
         public void Run()
         {
             if (Active) return;
-
             Active = true;
             _Listener = new TcpListener(IPAddress.Parse("127.0.0.1"), 10001);
             _Listener.Start();
@@ -43,37 +43,41 @@ namespace MonsterTradingCardsnew
                 int bytesRead = await client.GetStream().ReadAsync(buf, 0, buf.Length);
                 data += Encoding.UTF8.GetString(buf, 0, bytesRead);
             }
-            
+
             if (data.Contains("battle"))
             {
-                if (_WaitingClients.Contains(client))
+                _WaitingClients.Enqueue(client);
+                _DataTemp.Enqueue(data);
+
+                if (_WaitingClients.Count == 2)
                 {
-                    // Methode schreiben
+                    if (_WaitingClients.TryDequeue(out var client1) &&
+                        _WaitingClients.TryDequeue(out var client2) &&
+                        _DataTemp.TryDequeue(out var dataTempClient1) &&
+                        _DataTemp.TryDequeue(out var dataTempClient2))
+                    {
+                        HttpSvrEventArgs e1 = new HttpSvrEventArgs(client1, dataTempClient1);
+                        HttpSvrEventArgs e2 = new HttpSvrEventArgs(client2, dataTempClient2);
+
+                        Task.Run(() => StartBattleThread(e1, e2));
+                    }
                 }
                 else
                 {
-                    _WaitingClients.Enqueue(client);
-                    _DataTemp.Enqueue(data);
-
-                    if (_WaitingClients.Count == 2)
-                    {
-                        if (_WaitingClients.TryDequeue(out var client1) &&
-                            _WaitingClients.TryDequeue(out var client2) &&
-                            _DataTemp.TryDequeue(out var dataTempClient1) &&
-                            _DataTemp.TryDequeue(out var dataTempClient2))
-                        {
-                            HttpSvrEventArgs e1 = new HttpSvrEventArgs(client1, dataTempClient1);
-                            HttpSvrEventArgs e2 = new HttpSvrEventArgs(client2, dataTempClient2);
-                            
-                            BattleHandler._StartBattle(e1, e2);
-                        }
-                    }
+                    _BattleReady.Reset(); // Erster Spieler wartet
+                    _BattleReady.WaitOne(); // Blockiert, bis zweiter Spieler kommt
                 }
             }
             else
             {
                 Incoming?.Invoke(this, new(client, data));
             }
+        }
+
+        private void StartBattleThread(HttpSvrEventArgs player1, HttpSvrEventArgs player2)
+        {
+            _BattleReady.Set(); // Zweiter Spieler da -> Event freigeben
+            BattleHandler._StartBattle(player1, player2);
         }
     }
 }
