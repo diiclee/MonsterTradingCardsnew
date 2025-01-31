@@ -90,10 +90,11 @@ namespace MonsterTradingCardsnew
             if (attacker == Element.Normal && defender == Element.Fire) return 0.5f;
             if (attacker == Element.Water && defender == Element.Normal) return 0.5f;
 
-            return 1.0f; // Kein Effekt
+            return 1.0f;
         }
 
-        private static void UpdateStats(string winner, string loser, int winnerElo, int loserElo, int coins, int winCount, int lossCount)
+        private static void UpdateStats(string winner, string loser, int winnerElo, int loserElo, int coins,
+            int winCount, int lossCount)
         {
             using var connection = new NpgsqlConnection(DBHandler.ConnectionString);
             connection.Open();

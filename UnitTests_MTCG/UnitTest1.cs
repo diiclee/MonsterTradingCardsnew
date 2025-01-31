@@ -18,12 +18,12 @@ namespace MonsterTradingCardsnew.Tests
             InsertTestData();
         }
 
+        //Methode für Testdaten
         private void InsertTestData(bool includeCards = false, bool includeDeck = false)
         {
             using var connection = new NpgsqlConnection(TestConnectionString);
             connection.Open();
 
-            // Benutzer-Daten einfügen
             string insertUsersQuery = @"
         INSERT INTO users (username, password, coins, elo, wins, losses, bio, image) 
         VALUES 
@@ -36,7 +36,6 @@ namespace MonsterTradingCardsnew.Tests
             using var command = new NpgsqlCommand(insertUsersQuery, connection);
             command.ExecuteNonQuery();
 
-            // Falls Karten für Tests benötigt werden
             if (includeCards)
             {
                 string insertCardsQuery = @"
@@ -52,7 +51,6 @@ namespace MonsterTradingCardsnew.Tests
                 cardsCommand.ExecuteNonQuery();
             }
 
-            // Falls Deck-Daten benötigt werden
             if (includeDeck)
             {
                 string insertDeckQuery = @"
@@ -74,7 +72,6 @@ namespace MonsterTradingCardsnew.Tests
             using var connection = new NpgsqlConnection(TestConnectionString);
             connection.Open();
 
-            // Temporär alle Constraints deaktivieren
             using var disableConstraints = new NpgsqlCommand("SET CONSTRAINTS ALL DEFERRED;", connection);
             disableConstraints.ExecuteNonQuery();
 
@@ -87,9 +84,8 @@ namespace MonsterTradingCardsnew.Tests
         }
 
 
-        // ✅ Test für DataHandler
         [Test]
-        public void GetScoreboard_ShouldReturnUsersOrderedByElo()
+        public void GetScoreboard_UsersOrderedByElo()
         {
             var result = DataHandler.GetScoreboard();
             Assert.That(result, Is.Not.Null);
@@ -99,8 +95,9 @@ namespace MonsterTradingCardsnew.Tests
             Assert.That(result[2]["username"].ToString(), Is.EqualTo("TestUser3"));
         }
 
+        //should return correct user
         [Test]
-        public void GetUserStats_ShouldReturnCorrectUser()
+        public void GetUserStats()
         {
             var result = DataHandler.GetUserStats("TestUser1");
             Assert.That(result, Is.Not.Null);
@@ -111,9 +108,9 @@ namespace MonsterTradingCardsnew.Tests
             Assert.That(result[0]["losses"].ToString(), Is.EqualTo("5"));
         }
 
-        // ✅ Test für PackagesDataHandler
+        //should insert package when valid data is provided
         [Test]
-        public void CreatePackage_ShouldInsertPackage_WhenValidDataProvided()
+        public void CreatePackage()
         {
             JsonArray cardsArray = new JsonArray
             {
@@ -129,10 +126,10 @@ namespace MonsterTradingCardsnew.Tests
             Assert.That(message, Is.Empty);
         }
 
+        //should allow transaction when user has enough coins
         [Test]
-        public void BuyPackage_ShouldAllowPurchase_WhenUserHasEnoughCoins()
+        public void BuyPackage()
         {
-            // Erst ein Paket erstellen
             JsonArray cardsArray = new JsonArray
             {
                 new JsonObject { ["Id"] = "card1", ["Name"] = "Fire Goblin", ["Damage"] = "50" },
@@ -145,15 +142,14 @@ namespace MonsterTradingCardsnew.Tests
 
             Assert.That(packageCreated, Is.True, $"CreatePackage failed: {createMessage}");
 
-            // Teste Kauf
             bool result = PackagesDataHandler.BuyPackage("TestUser1", out string message);
 
             Assert.That(result, Is.True, $"BuyPackage failed: {message}");
         }
 
-
+        //should fail when user has not enough coins
         [Test]
-        public void BuyPackage_ShouldFail_WhenUserHasNotEnoughCoins()
+        public void BuyPackage_Fail()
         {
             JsonArray cardsArray = new JsonArray
             {
@@ -170,22 +166,23 @@ namespace MonsterTradingCardsnew.Tests
             Assert.That(message, Is.EqualTo("Not enough coins to buy a package."));
         }
 
+        //there should be a winner when decks are unequal
         [Test]
-        public void StartBattle_ShouldDeclareWinner_WhenDecksAreUnequal()
+        public void StartBattle_UnequalDecks()
         {
             var deck1 = new List<Card>
             {
-                new ("Fire Dragon", 50, Element.Fire, "Monster",
+                new("Fire Dragon", 50, Element.Fire, "Monster",
                     "Dragon"),
-                new ("Water Goblin", 30, Element.Water, "Monster",
+                new("Water Goblin", 30, Element.Water, "Monster",
                     "Goblin")
             };
 
             var deck2 = new List<Card>
             {
-                new ("Normal Knight", 20, Element.Normal, "Monster",
+                new("Normal Knight", 20, Element.Normal, "Monster",
                     "Knight"),
-                new ("Fire Spell", 40, Element.Fire, "Spell")
+                new("Fire Spell", 40, Element.Fire, "Spell")
             };
 
 
@@ -194,9 +191,10 @@ namespace MonsterTradingCardsnew.Tests
             Assert.That(result, Is.Not.Empty);
             Assert.That(result[^1], Does.Contain("gewinnt!"));
         }
-        
+
+        //should fail when decks are empty
         [Test]
-        public void StartBattle_ShouldReturnError_WhenDeckIsEmpty()
+        public void StartBattle_EmptyDeck()
         {
             var deck1 = new List<MonsterTradingCardsnew.Card>();
             var deck2 = new List<MonsterTradingCardsnew.Card>
@@ -211,113 +209,95 @@ namespace MonsterTradingCardsnew.Tests
             Assert.That(result[^1], Is.EqualTo("Einer der Spieler hat kein vollständiges Deck."));
         }
 
+        //hashing should be successful
         [Test]
-        public void HashPassword_ShouldReturnNonEmptyHash()
+        public void HashPassword_NotEmptyHash()
         {
-            // Act
             string hash = PasswordHelper.HashPassword("securepassword");
 
-            // Assert
             Assert.That(hash, Is.Not.Null.And.Not.Empty);
         }
-        
+
+        //different passwords -> different hashes
         [Test]
-        public void HashPassword_DifferentInputs_ShouldProduceDifferentHashes()
+        public void HashPassword_DifferentHashes()
         {
-            // Act
             string hash1 = PasswordHelper.HashPassword("password123");
             string hash2 = PasswordHelper.HashPassword("differentpassword");
 
-            // Assert
             Assert.That(hash1, Is.Not.EqualTo(hash2));
         }
 
         [Test]
-        public void VerifyPassword_CorrectPassword_ShouldReturnTrue()
+        public void VerifyPassword_CorrectPassword()
         {
-            // Arrange
             string password = "correctpassword";
             string hash = PasswordHelper.HashPassword(password);
 
-            // Act
             bool result = PasswordHelper.VerifyPassword(password, hash);
 
-            // Assert
             Assert.That(result, Is.True);
         }
 
         [Test]
-        public void VerifyPassword_IncorrectPassword_ShouldReturnFalse()
+        public void VerifyPassword_IncorrectPassword()
         {
-            // Arrange
             string hash = PasswordHelper.HashPassword("originalpassword");
 
-            // Act
             bool result = PasswordHelper.VerifyPassword("wrongpassword", hash);
 
-            // Assert
             Assert.That(result, Is.False);
         }
 
-
-        // ✅ Test für SetDeck() (Erfolgreiches Setzen)
+        //four valid cards
         [Test]
-        public void SetDeck_ShouldSucceed_WhenFourValidCardsAreGiven()
+        public void SetDeck_Success()
         {
             InsertTestData(includeCards: true);
-            // Arrange
             List<string> cardIds = new List<string> { "card1", "card2", "card3", "card4" };
 
-            // Act
             bool result = Card.SetDeck("TestUser1", cardIds, out string message);
 
-            // Assert
             Assert.That(result, Is.True, $"SetDeck failed: {message}");
         }
 
-        // ✅ Test für SetDeck() (Fehlschlag mit falscher Anzahl an Karten)
+        //only two cards for deck
         [Test]
-        public void SetDeck_ShouldFail_WhenNotFourCardsAreGiven()
+        public void SetDeck_Fail()
         {
-            // Arrange
             List<string> cardIds = new List<string> { "card1", "card2" };
 
-            // Act
             bool result = Card.SetDeck("TestUser1", cardIds, out string message);
 
-            // Assert
             Assert.That(result, Is.False);
             Assert.That(message, Is.EqualTo("Some cards do not belong to the user or are invalid."));
         }
 
-
-        // ✅ Test für GetDeckByUsername() (Leeres Deck)
+        //when no deck is set
         [Test]
-        public void GetDeckByUsername_ShouldReturnEmptyList_WhenNoDeckIsSet()
+        public void GetDeckByUsername_EmptyList()
         {
-            // Act
             var result = Card.GetDeckByUsername("TestUser3");
 
-            // Assert
             Assert.That(result, Is.Empty, "Erwartet wurde ein leeres Deck.");
         }
 
         [Test]
-        public void UserExists_ShouldReturnTrue_WhenUserExists()
+        public void UserExists_True()
         {
             bool result = DBHandler.UserExists("TestUser1");
             Assert.That(result, Is.True);
         }
 
         [Test]
-        public void UserExists_ShouldReturnFalse_WhenUserDoesNotExist()
+        public void UserExists_False()
         {
             bool result = DBHandler.UserExists("UnknownUser");
             Assert.That(result, Is.False);
         }
 
         [Test]
-        public void GetUser_ShouldReturnUser_WhenUserExists()
+        public void GetUser_WhenUserExists()
         {
             var user = DBHandler.GetUser("TestUser1");
             Assert.That(user, Is.Not.Null);
@@ -326,14 +306,14 @@ namespace MonsterTradingCardsnew.Tests
         }
 
         [Test]
-        public void GetUser_ShouldReturnNull_WhenUserDoesNotExist()
+        public void GetUser_WhenUserDoesNotExist()
         {
             var user = DBHandler.GetUser("UnknownUser");
             Assert.That(user, Is.Null);
         }
 
         [Test]
-        public void CreateUser_ShouldInsertNewUser()
+        public void CreateUser_NewUser()
         {
             DBHandler.CreateUser("NewUser", "secure_hash");
 
@@ -345,18 +325,14 @@ namespace MonsterTradingCardsnew.Tests
             Assert.That(user.UserName, Is.EqualTo("NewUser"));
             Assert.That(user.Password, Is.EqualTo("secure_hash"));
         }
-        
-        [Test]
-        public void GetUserCards_ShouldReturnEmptyList_WhenUserHasNoCards()
-        {
-            // Act: Abrufen der Karten eines Benutzers ohne Karten
-            var result = Card.GetUserCards("TestUser3"); // TestUser3 hat keine Karten
 
-            // Assert: Die Liste sollte leer sein
+        [Test]
+        public void GetUserCards_NoCards()
+        {
+            var result = Card.GetUserCards("TestUser3");
+
             Assert.That(result, Is.Not.Null);
             Assert.That(result.Count, Is.EqualTo(0));
         }
-
-
     }
 }

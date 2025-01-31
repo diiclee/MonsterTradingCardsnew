@@ -93,7 +93,6 @@ namespace MonsterTradingCardsnew
                 cardsPlainText.Add($"{card.Name} ({card.Damage} Schaden, {card.ElementType})");
             }
 
-            // Überprüfung, ob `format=plain` im Query-String ist
             bool isPlainFormat = e.Path.Contains("format=plain");
 
             if (isPlainFormat)

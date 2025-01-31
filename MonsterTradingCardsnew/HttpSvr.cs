@@ -15,7 +15,7 @@ namespace MonsterTradingCardsnew
 
         private readonly ConcurrentQueue<TcpClient> _WaitingClients = new();
         private readonly ConcurrentQueue<string> _DataTemp = new();
-        private readonly ManualResetEvent _BattleReady = new(false); // Synchronisationsmechanismus
+        private readonly ManualResetEvent _BattleReady = new(false);
 
         public bool Active { get; private set; } = false;
 
@@ -25,7 +25,7 @@ namespace MonsterTradingCardsnew
             Active = true;
             _Listener = new TcpListener(IPAddress.Parse("127.0.0.1"), 10001);
             _Listener.Start();
-            
+
             while (Active)
             {
                 TcpClient client = _Listener.AcceptTcpClient();
@@ -64,8 +64,8 @@ namespace MonsterTradingCardsnew
                 }
                 else
                 {
-                    _BattleReady.Reset(); // Erster Spieler wartet
-                    _BattleReady.WaitOne(); // Blockiert, bis zweiter Spieler kommt
+                    _BattleReady.Reset();
+                    _BattleReady.WaitOne();
                 }
             }
             else
@@ -76,7 +76,7 @@ namespace MonsterTradingCardsnew
 
         private void StartBattleThread(HttpSvrEventArgs player1, HttpSvrEventArgs player2)
         {
-            _BattleReady.Set(); // Zweiter Spieler da -> Event freigeben
+            _BattleReady.Set();
             BattleHandler._StartBattle(player1, player2);
         }
     }

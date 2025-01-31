@@ -5,7 +5,6 @@ namespace MonsterTradingCardsnew
 {
     public class DBHandler
     {
-        // Angepasster ConnectionString für Docker-Compose
         public static string ConnectionString =
             "Host=127.0.0.1;Port=5432;Database=mtcg;Username=postgres;Password=dicle";
 
@@ -14,21 +13,16 @@ namespace MonsterTradingCardsnew
             ConnectionString = newConnectionString;
         }
 
-        
-        // Funktion zum Testen der Datenbankverbindung
         public static bool TestDatabaseConnection()
         {
             try
             {
-                // Versuche, eine Verbindung zur Datenbank aufzubauen
                 using var connection = new NpgsqlConnection(ConnectionString);
                 connection.Open();
 
-                // Führe eine einfache SELECT-Abfrage aus, um zu überprüfen, ob die Verbindung funktioniert
                 using var command = new NpgsqlCommand("SELECT 1", connection);
                 var result = command.ExecuteScalar();
 
-                // Wenn die Abfrage erfolgreich ist, geben wir true zurück
                 if (result != null && Convert.ToInt32(result) == 1)
                 {
                     Console.WriteLine("Datenbankverbindung erfolgreich!");
@@ -40,13 +34,11 @@ namespace MonsterTradingCardsnew
             }
             catch (Exception ex)
             {
-                // Wenn ein Fehler auftritt, gib eine Fehlermeldung aus
                 Console.WriteLine($"Fehler bei der Verbindung zur Datenbank: {ex.Message}");
                 return false;
             }
         }
 
-        // Überprüft, ob ein Benutzer existiert
         public static bool UserExists(string userName)
         {
             try
@@ -68,7 +60,6 @@ namespace MonsterTradingCardsnew
             }
         }
 
-        // Liest einen Benutzer aus der Datenbank
         public static User? GetUser(string userName)
         {
             try
@@ -91,7 +82,7 @@ namespace MonsterTradingCardsnew
                     };
                 }
 
-                return null; // Benutzer nicht gefunden
+                return null;
             }
             catch (Exception ex)
             {
@@ -100,7 +91,6 @@ namespace MonsterTradingCardsnew
             }
         }
 
-        // Methode zum Erstellen eines Benutzers in der Datenbank
         public static void CreateUser(string userName, string hashedPassword)
         {
             try
@@ -123,6 +113,7 @@ namespace MonsterTradingCardsnew
                 Console.WriteLine($"Fehler beim Erstellen des Benutzers: {ex.Message}");
             }
         }
+
         public static bool UpdateUser(string username, string? name, string? bio, string? image)
         {
             try
@@ -130,14 +121,13 @@ namespace MonsterTradingCardsnew
                 using var connection = new NpgsqlConnection(ConnectionString);
                 connection.Open();
 
-                // Dynamisches Update-Statement erstellen
                 string query = "UPDATE users SET ";
                 List<string> updates = new();
                 if (name != null) updates.Add("name_choice = @Name");
                 if (bio != null) updates.Add("bio = @Bio");
                 if (image != null) updates.Add("image = @Image");
 
-                if (updates.Count == 0) return false; // Falls nichts geändert wird, Abbruch
+                if (updates.Count == 0) return false;
 
                 query += string.Join(", ", updates) + " WHERE username = @Username";
 
@@ -156,7 +146,5 @@ namespace MonsterTradingCardsnew
                 return false;
             }
         }
-
     }
 }
-        

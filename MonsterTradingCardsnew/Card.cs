@@ -32,7 +32,8 @@ namespace MonsterTradingCardsnew
                 using var connection = new NpgsqlConnection(DBHandler.ConnectionString);
                 connection.Open();
 
-                string query = "SELECT card_id, name, damage, element_type, card_type, monster_type FROM cards WHERE username = @username";
+                string query =
+                    "SELECT card_id, name, damage, element_type, card_type, monster_type FROM cards WHERE username = @username";
                 using var command = new NpgsqlCommand(query, connection);
                 command.Parameters.AddWithValue("@username", username);
 

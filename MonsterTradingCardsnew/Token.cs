@@ -31,7 +31,7 @@ namespace MonsterTradingCardsnew
         /// <returns>Token string.</returns>
         internal static string _CreateTokenFor(User user)
         {
-            string token = $"{user.UserName}-mtcgToken"; // Token-Format: username-mtcgToken
+            string token = $"{user.UserName}-mtcgToken"; 
             _Tokens[token] = user;
             return token;
         }

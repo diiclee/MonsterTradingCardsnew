@@ -55,7 +55,8 @@ namespace MonsterTradingCardsnew
         {
             username = "";
             status = HttpStatusCode.UNAUTHORIZED;
-            var authorizationHeader = e.Headers.FirstOrDefault(h => h.Name.Equals("Authorization", StringComparison.OrdinalIgnoreCase))?.Value;
+            var authorizationHeader = e.Headers
+                .FirstOrDefault(h => h.Name.Equals("Authorization", StringComparison.OrdinalIgnoreCase))?.Value;
 
             if (string.IsNullOrEmpty(authorizationHeader) || !authorizationHeader.StartsWith("Bearer "))
             {
