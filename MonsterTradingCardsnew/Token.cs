@@ -31,17 +31,9 @@ namespace MonsterTradingCardsnew
         /// <returns>Token string.</returns>
         internal static string _CreateTokenFor(User user)
         {
-            string rval = string.Empty;
-            Random rnd = new();
-
-            for (int i = 0; i < 24; i++)
-            {
-                rval += _ALPHABET[rnd.Next(0, 62)];
-            }
-
-            _Tokens.Add(rval, user);
-
-            return rval;
+            string token = $"{user.UserName}-mtcgToken"; // Token-Format: username-mtcgToken
+            _Tokens[token] = user;
+            return token;
         }
 
 

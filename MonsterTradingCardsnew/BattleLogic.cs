@@ -10,7 +10,7 @@ namespace MonsterTradingCardsnew
         public static List<string> StartBattle(string username1, string username2, List<Card> deck1, List<Card> deck2)
         {
             var log = new List<string>();
-            log.Add($"Kampf startet zwischen {username1} und {username2}!");
+            log.Add($"\nKampf startet zwischen {username1} und {username2}!");
 
             if (deck1.Count == 0 || deck2.Count == 0)
             {

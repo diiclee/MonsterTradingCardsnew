@@ -20,8 +20,8 @@ namespace MonsterTradingCardsnew
                 return;
             }
 
-            var deck1 = CardHandler.GetDeckByUsername(username1);
-            var deck2 = CardHandler.GetDeckByUsername(username2);
+            var deck1 = Card.GetDeckByUsername(username1);
+            var deck2 = Card.GetDeckByUsername(username2);
 
             log = BattleLogic.StartBattle(username1, username2, deck1, deck2);
             SendBattleLog(player1, player2, log);
